@@ -13,8 +13,7 @@ const studentSchema = new mongoose.Schema({
     },
     age:{
         type : Number,
-        min:4,
-        max : 19,
+       
     },
     department:{
         type:String,

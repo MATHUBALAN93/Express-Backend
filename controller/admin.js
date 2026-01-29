@@ -1,75 +1,91 @@
 const express = require("express");
-const Student = require('../models/student.js')
-
+const Student = require('../models/student.js');
 const router = express.Router();
 
-const createStud = async (req,res) =>{
-    try{
-        const {name ,email ,age, department} = req.body;
 
-        if(!name || !email || !age || !department){
-            return res.status(400).json({message : "All fields are required"});
-        }
 
-        const curEmail = await Student.findOne({email});
+// CREATE
+const createStud = async (req, res) => {
+  try {
+    // console.log("REQ BODY 👉", req.body);
+    const { name, email, age, department } = req.body;
 
-        if(curEmail){
-            return res.status(400).send("User already exist");
-        }
-        const newStud = new Student({name , email , age, department});
-
-        await newStud.save();
-
-    }catch(e){
-        res.status(500).send("Server side error")
-        console.log(e)
+    if (!name || !email || !age || !department) {
+      return res.status(400).json({ message: "All fields are required" });
     }
-}
 
-const getStud = async (req , res) =>{
-    try{
-         
-        const studs =await Student.find();
-        res.status(200).json({Students : studs});
+    const curEmail = await Student.findOne({ email });
+
+    if (curEmail) {
+      return res.status(400).json({ message: "User already exists" });
     }
-    catch(e){
-        res.status(500).send("server side error");
-        console.log(e);
-        
+
+    const newStud = Student.create({ name, email, age, department });
+    // await newStud.save();
+
+    res.status(201).json({
+      message: "Student created successfully",
+      student: newStud
+    });
+
+  } catch (e) {
+    console.log(e);
+    res.status(500).json(e);
+  }
+};
+
+// READ
+const getStud = async (req, res) => {
+  try {
+    const studs = await Student.find();
+    res.status(200).json({ Students: studs });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: "Server side error" });
+  }
+};
+
+// UPDATE
+const updateStud = async (req, res) => {
+  try {
+    const { name, email, age, department } = req.body;
+
+    const curStud = await Student.findOne({ email });
+
+    if (!curStud) {
+      return res.status(400).json({ message: "User doesn't exist" });
     }
-}
 
-const updateStud = async (req, res)=>{
-    try{
-        const {name , email , age , department} = req.body;
+    await Student.findOneAndUpdate(
+      { email },
+      { name, age, department },
+      { new: true }
+    );
 
-        const curStud = await Student.findOne(email);
+    res.status(200).json({ message: "Updated successfully" });
 
-        if(!curStud){
-            return res.status(400).send("User does'nt exist");
-        }
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: "Server side error" });
+  }
+};
 
-        const updatedStud  =  await Student.findOneAndUpdate(email , {name , email , age , department},{new : true})
-        res.status(200).send("Updated successfully");
-    }   
-    catch(e){
-        res.status(500).send("Server side error");
+// DELETE
+const deleteStud = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email required" });
     }
-}
 
-const deleteStud = async (req, res)=>{
-    try{
-        const {email} = req.body;
+    await Student.deleteOne({ email });
+    res.status(200).json({ message: "Deleted successfully" });
 
-        if(!email){
-            return res.status(400).send("User does'nt exist");
-        }
-        await Student.deleteOne({email});
-        res.status(200).send("Deleted successfully");
-    }
-    catch(e){
-        res.status(500).send("Server error")
-    }
-}
-module.exports = {createStud , getStud , updateStud, deleteStud};
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: "Server side error" });
+  }
+};
 
+module.exports = { createStud, getStud, updateStud, deleteStud };
